@@ -201,10 +201,18 @@ async function cdpClick(client, x, y) {
     try { client = await page.target().createCDPSession(); replayPage = page; pageForSpam = page; console.log('CDP created on original page fallback.'); } catch (e2) { console.log('No CDP session available', e2.message || e2); }
   }
 
-  // replay steps.json like before
-  const stepsFile = path.resolve(__dirname, 'steps.json');
+  const stepsUrl = 'https://raw.githubusercontent.com/dg-project-0103/click/main/steps.json';
   let stepsJson = null;
-  try { stepsJson = JSON.parse(fs.readFileSync(stepsFile, 'utf8')); } catch (e) { console.log('Failed to read steps.json:', e.message); }
+
+  try {
+      const response = await fetch(stepsUrl);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      stepsJson = await response.json();
+      console.log('Loaded steps.json from GitHub:');
+  } catch (e) {
+      console.log('Failed to fetch steps.json:');
+  }
+
 
   if (stepsJson && Array.isArray(stepsJson.steps) && client) {
     console.log('Loaded steps.json — starting replay of steps on the correct page...');
@@ -351,11 +359,19 @@ async function cdpClick(client, x, y) {
   // Desired overall CPS target (choose between ~100 and ~200). Default 150.
   const TARGET_CPS = 2000;
 
-  // load Clicking.json
-  const clickingFile = path.resolve(__dirname, 'Clicking.json');
+  // GitHub raw URL for Clicking.json
+  const clickingFile = 'https://raw.githubusercontent.com/dg-project-0103/click/main/Clicking.json';
   let clickingJson = null;
-  try { clickingJson = JSON.parse(fs.readFileSync(clickingFile, 'utf8')); console.log('Loaded Clicking.json'); }
-  catch (e) { console.log('Failed to read Clicking.json:', e.message); clickingJson = null; }
+  try {
+      const response = await fetch(clickingFile);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      clickingJson = await response.json();
+      console.log('Loaded Clicking.json from GitHub');
+  } catch (e) {
+      console.log('Failed to fetch Clicking.json:', e.message);
+      clickingJson = null;
+  }
+
 
   // helpers
   function normalizeXpathCandidate(sel) { return sel.replace(/^\s*xpath:?\/*/i, '').trim(); }
